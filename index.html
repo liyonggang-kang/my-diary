@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>暖心手账 - 个人日记</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        :root{--cream:#FDF8F0;--cream-dark:#F5EDE0;--paper:#FFFEF9;--ink:#4A4036;--ink-light:#8C7B6B;--accent:#D4A574;--accent-soft:#E8D5C4;--shadow:rgba(74,64,54,0.08);--shadow-deep:rgba(74,64,54,0.12)}
+        body{font-family:'Noto Serif SC',serif;background-color:var(--cream);background-image:radial-gradient(circle at 20% 50%,rgba(212,165,116,0.03) 0%,transparent 50%),radial-gradient(circle at 80% 80%,rgba(232,180,184,0.03) 0%,transparent 50%);color:var(--ink);min-height:100vh;overflow-x:hidden}
+        body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background-image:url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:1000}
+        .login-container{display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px}
+        .login-book{background:var(--paper);border-radius:20px;padding:50px 40px;box-shadow:0 10px 40px var(--shadow),0 2px 8px var(--shadow-deep),inset 0 1px 0 rgba(255,255,255,0.8);max-width:420px;width:100%;position:relative;border:1px solid var(--cream-dark)}
+        .login-book::before{content:'';position:absolute;left:30px;top:20px;bottom:20px;width:2px;background:linear-gradient(to bottom,transparent,var(--accent-soft) 20%,var(--accent-soft) 80%,transparent);opacity:0.5}
+        .login-title{font-family:'Ma Shan Zheng',cursive;font-size:2.8em;text-align:center;color:var(--ink);margin-bottom:10px;letter-spacing:4px}
+        .login-subtitle{text-align:center;color:var(--ink-light);font-size:0.95em;margin-bottom:35px;font-style:italic}
+        .form-group{margin-bottom:20px;padding-left:25px}
+        .form-label{display:block;margin-bottom:8px;font-size:0.9em;color:var(--ink-light);font-weight:600}
+        .form-input{width:100%;padding:12px 16px;border:2px solid var(--cream-dark);border-radius:12px;background:var(--cream);font-family:'Noto Serif SC',serif;font-size:1em;color:var(--ink);transition:all 0.3s ease;outline:none}
+        .form-input:focus{border-color:var(--accent);background:var(--paper);box-shadow:0 0 0 4px rgba(212,165,116,0.1)}
+        .btn{padding:12px 28px;border:none;border-radius:12px;font-family:'Noto Serif SC',serif;font-size:1em;cursor:pointer;transition:all 0.3s ease;outline:none}
+        .btn-primary{background:var(--ink);color:var(--paper);width:100%;margin-top:10px;margin-left:25px;width:calc(100% - 25px)}
+        .btn-primary:hover{background:var(--accent);transform:translateY(-2px);box-shadow:0 4px 12px var(--shadow-deep)}
+        .btn-secondary{background:transparent;color:var(--ink-light);border:2px solid var(--cream-dark);margin-top:12px;margin-left:25px;width:calc(100% - 25px)}
+        .btn-secondary:hover{border-color:var(--accent);color:var(--accent)}
+        .error-msg{color:#C75B5B;font-size:0.85em;margin-top:8px;margin-left:25px;display:none}
+        .app-container{display:none;min-height:100vh}
+        .app-header{background:var(--paper);border-bottom:1px solid var(--cream-dark);padding:15px 30px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 10px var(--shadow);position:sticky;top:0;z-index:100}
+        .app-title{font-family:'Ma Shan Zheng',cursive;font-size:1.8em;color:var(--ink)}
+        .user-info{display:flex;align-items:center;gap:15px}
+        .user-avatar{width:36px;height:36px;border-radius:50%;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;font-size:1.2em}
+        .user-name{font-weight:600;color:var(--ink)}
+        .btn-logout{background:none;border:1px solid var(--cream-dark);color:var(--ink-light);padding:6px 14px;border-radius:8px;font-size:0.85em;cursor:pointer;transition:all 0.3s}
+        .btn-logout:hover{border-color:#E8B4B8;color:#C75B5B}
+        .main-content{display:flex;max-width:1400px;margin:0 auto;padding:30px;gap:30px;min-height:calc(100vh - 70px)}
+        .calendar-section{flex:0 0 480px;background:var(--paper);border-radius:20px;padding:30px;box-shadow:0 4px 20px var(--shadow);border:1px solid var(--cream-dark);height:fit-content;position:sticky;top:90px}
+        .calendar-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:25px}
+        .calendar-nav{display:flex;align-items:center;gap:15px}
+        .nav-btn{background:var(--cream);border:2px solid var(--cream-dark);width:36px;height:36px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.2em;color:var(--ink);transition:all 0.3s}
+        .nav-btn:hover{background:var(--accent-soft);border-color:var(--accent);transform:scale(1.1)}
+        .current-month{font-family:'Ma Shan Zheng',cursive;font-size:1.6em;color:var(--ink);min-width:140px;text-align:center}
+        .weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-bottom:12px}
+        .weekday{text-align:center;font-size:0.85em;color:var(--ink-light);font-weight:600;padding:8px}
+        .calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+        .calendar-day{aspect-ratio:1;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all 0.3s ease;border:2px solid transparent;background:var(--cream);position:relative;padding:4px}
+        .calendar-day:hover{background:var(--accent-soft);transform:translateY(-2px);box-shadow:0 4px 12px var(--shadow)}
+        .calendar-day.other-month{opacity:0.3}
+        .calendar-day.today{border-color:var(--accent);background:rgba(212,165,116,0.1)}
+        .calendar-day.selected{background:var(--ink);color:var(--paper);transform:scale(1.05);box-shadow:0 4px 15px var(--shadow-deep)}
+        .day-number{font-size:0.95em;font-weight:600;margin-bottom:2px}
+        .day-emoji{font-size:1.4em;line-height:1}
+        .diary-section{flex:1;min-width:0}
+        .diary-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:25px}
+        .diary-title{font-family:'Ma Shan Zheng',cursive;font-size:1.8em;color:var(--ink)}
+        .btn-new{background:var(--ink);color:var(--paper);padding:10px 24px;border-radius:12px;border:none;font-family:'Noto Serif SC',serif;font-size:0.95em;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all 0.3s;box-shadow:0 2px 8px var(--shadow)}
+        .btn-new:hover{background:var(--accent);transform:translateY(-2px);box-shadow:0 4px 15px var(--shadow-deep)}
+        .diary-list{display:flex;flex-direction:column;gap:20px}
+        .date-group{background:var(--paper);border-radius:16px;padding:24px;box-shadow:0 2px 12px var(--shadow);border:1px solid var(--cream-dark);transition:transform 0.3s}
+        .date-group:hover{transform:translateX(4px)}
+        .date-header{display:flex;align-items:center;gap:12px;margin-bottom:16px;padding-bottom:12px;border-bottom:2px dashed var(--cream-dark)}
+        .date-badge{background:var(--accent-soft);color:var(--ink);padding:6px 14px;border-radius:20px;font-size:0.9em;font-weight:600;font-family:'Ma Shan Zheng',cursive;letter-spacing:1px}
+        .date-weekday{color:var(--ink-light);font-size:0.85em}
+        .entries-list{display:flex;flex-direction:column;gap:12px}
+        .entry-card{background:var(--cream);border-radius:12px;padding:16px 20px;cursor:pointer;transition:all 0.3s;border:1px solid transparent;display:flex;align-items:center;gap:15px}
+        .entry-card:hover{background:var(--paper);border-color:var(--accent-soft);box-shadow:0 2px 8px var(--shadow);transform:translateX(6px)}
+        .entry-emoji{font-size:1.8em;flex-shrink:0}
+        .entry-content{flex:1;min-width:0}
+        .entry-title{font-weight:600;color:var(--ink);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .entry-preview{font-size:0.85em;color:var(--ink-light);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .entry-time{font-size:0.8em;color:var(--ink-light);flex-shrink:0}
+        .modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(74,64,54,0.4);backdrop-filter:blur(4px);z-index:200;justify-content:center;align-items:center;padding:20px}
+        .modal-overlay.active{display:flex}
+        .modal-content{background:var(--paper);border-radius:20px;padding:35px;max-width:600px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(74,64,54,0.2);border:1px solid var(--cream-dark);position:relative}
+        .modal-close{position:absolute;top:20px;right:20px;background:none;border:none;font-size:1.5em;cursor:pointer;color:var(--ink-light);width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all 0.3s}
+        .modal-close:hover{background:var(--cream);color:var(--ink);transform:rotate(90deg)}
+        .modal-title{font-family:'Ma Shan Zheng',cursive;font-size:1.6em;margin-bottom:25px;color:var(--ink);padding-right:40px}
+        .emoji-selector{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;padding:15px;background:var(--cream);border-radius:12px}
+        .emoji-option{font-size:1.8em;cursor:pointer;padding:8px;border-radius:10px;transition:all 0.3s;border:2px solid transparent;background:var(--paper)}
+        .emoji-option:hover{transform:scale(1.2);background:var(--accent-soft)}
+        .emoji-option.selected{border-color:var(--accent);background:var(--accent-soft);transform:scale(1.1)}
+        .form-textarea{width:100%;min-height:200px;padding:16px;border:2px solid var(--cream-dark);border-radius:12px;background:var(--cream);font-family:'Noto Serif SC',serif;font-size:1em;line-height:1.8;color:var(--ink);resize:vertical;outline:none;transition:all 0.3s}
+        .form-textarea:focus{border-color:var(--accent);background:var(--paper)}
+        .detail-date{color:var(--ink-light);font-size:0.9em;margin-bottom:20px;display:flex;align-items:center;gap:10px}
+        .detail-content{line-height:2;color:var(--ink);font-size:1.05em;white-space:pre-wrap}
+        .detail-actions{display:flex;gap:10px;margin-top:25px;padding-top:20px;border-top:1px solid var(--cream-dark)}
+        .btn-danger{background:transparent;color:#C75B5B;border:1px solid #E8B4B8}
+        .btn-danger:hover{background:#FDF0F0}
+        .empty-state{text-align:center;padding:60px 20px;color:var(--ink-light)}
+        .empty-emoji{font-size:3em;margin-bottom:15px;opacity:0.5}
+        .empty-text{font-family:'Ma Shan Zheng',cursive;font-size:1.3em;margin-bottom:8px}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+        .fade-in{animation:fadeIn 0.4s ease}
+        @keyframes slideIn{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:translateX(0)}}
+        .slide-in{animation:slideIn 0.5s ease}
+        @media(max-width:900px){.main-content{flex-direction:column}.calendar-section{flex:1;position:static}}
+        ::-webkit-scrollbar{width:8px}::-webkit-scrollbar-track{background:var(--cream)}::-webkit-scrollbar-thumb{background:var(--accent-soft);border-radius:4px}::-webkit-scrollbar-thumb:hover{background:var(--accent)}
+    </style>
+</head>
+<body>
+    <div class="login-container" id="loginPage">
+        <div class="login-book fade-in">
+            <h1 class="login-title">暖心手账</h1>
+            <p class="login-subtitle">记录生活中的每一份温暖</p>
+            <div id="loginForm">
+                <div class="form-group"><label class="form-label">账号</label><input type="text" class="form-input" id="loginUsername" placeholder="请输入您的账号"></div>
+                <div class="form-group"><label class="form-label">密码</label><input type="password" class="form-input" id="loginPassword" placeholder="请输入密码"></div>
+                <p class="error-msg" id="loginError">账号或密码错误</p>
+                <button class="btn btn-primary" onclick="handleLogin()">开启日记本</button>
+                <button class="btn btn-secondary" onclick="showRegister()">新建账号</button>
+            </div>
+            <div id="registerForm" style="display:none;">
+                <div class="form-group"><label class="form-label">新账号</label><input type="text" class="form-input" id="regUsername" placeholder="创建账号名称"></div>
+                <div class="form-group"><label class="form-label">密码</label><input type="password" class="form-input" id="regPassword" placeholder="设置密码"></div>
+                <div class="form-group"><label class="form-label">确认密码</label><input type="password" class="form-input" id="regConfirm" placeholder="再次输入密码"></div>
+                <p class="error-msg" id="regError"></p>
+                <button class="btn btn-primary" onclick="handleRegister()">创建日记本</button>
+                <button class="btn btn-secondary" onclick="showLogin()">已有账号</button>
+            </div>
+        </div>
+    </div>
+    <div class="app-container" id="appPage">
+        <header class="app-header">
+            <div class="app-title">📖 暖心手账</div>
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar">👤</div>
+                <span class="user-name" id="displayUsername"></span>
+                <button class="btn-logout" onclick="handleLogout()">退出</button>
+            </div>
+        </header>
+        <main class="main-content">
+            <section class="calendar-section slide-in">
+                <div class="calendar-header">
+                    <div class="calendar-nav">
+                        <button class="nav-btn" onclick="changeMonth(-1)">◀</button>
+                        <span class="current-month" id="currentMonth">2026年5月</span>
+                        <button class="nav-btn" onclick="changeMonth(1)">▶</button>
+                    </div>
+                </div>
+                <div class="weekdays"><div class="weekday">日</div><div class="weekday">一</div><div class="weekday">二</div><div class="weekday">三</div><div class="weekday">四</div><div class="weekday">五</div><div class="weekday">六</div></div>
+                <div class="calendar-grid" id="calendarGrid"></div>
+            </section>
+            <section class="diary-section">
+                <div class="diary-header">
+                    <h2 class="diary-title" id="diaryMonthTitle">五月手记</h2>
+                    <button class="btn-new" onclick="openNewEntry()"><span>✏️</span><span>记一笔</span></button>
+                </div>
+                <div class="diary-list" id="diaryList"></div>
+            </section>
+        </main>
+    </div>
+    <div class="modal-overlay" id="entryModal">
+        <div class="modal-content fade-in">
+            <button class="modal-close" onclick="closeModal()">×</button>
+            <h3 class="modal-title" id="modalTitle">写下今天的心情</h3>
+            <div class="form-group" style="padding-left:0">
+                <label class="form-label">选择一个表情代表今天</label>
+                <div class="emoji-selector" id="emojiSelector">
+                    <span class="emoji-option selected" data-emoji="📝">📝</span>
+                    <span class="emoji-option" data-emoji="😊">😊</span>
+                    <span class="emoji-option" data-emoji="🥰">🥰</span>
+                    <span class="emoji-option" data-emoji="😌">😌</span>
+                    <span class="emoji-option" data-emoji="🤔">🤔</span>
+                    <span class="emoji-option" data-emoji="😴">😴</span>
+                    <span class="emoji-option" data-emoji="🎉">🎉</span>
+                    <span class="emoji-option" data-emoji="🌸">🌸</span>
+                    <span class="emoji-option" data-emoji="☕">☕</span>
+                    <span class="emoji-option" data-emoji="📚">📚</span>
+                    <span class="emoji-option" data-emoji="🎵">🎵</span>
+                    <span class="emoji-option" data-emoji="🌙">🌙</span>
+                </div>
+            </div>
+            <div class="form-group" style="padding-left:0"><label class="form-label">标题</label><input type="text" class="form-input" id="entryTitle" placeholder="给今天起个标题..."></div>
+            <div class="form-group" style="padding-left:0"><label class="form-label">正文</label><textarea class="form-textarea" id="entryContent" placeholder="在这里写下你的故事..."></textarea></div>
+            <button class="btn btn-primary" style="margin-left:0;width:100%" onclick="saveEntry()">保存到日记本</button>
+        </div>
+    </div>
+    <div class="modal-overlay" id="detailModal">
+        <div class="modal-content fade-in">
+            <button class="modal-close" onclick="closeDetailModal()">×</button>
+            <div class="detail-date" id="detailDate"></div>
+            <h3 class="modal-title" id="detailTitle"></h3>
+            <div class="detail-content" id="detailContent"></div>
+            <div class="detail-actions">
+                <button class="btn btn-secondary" style="margin-left:0;width:auto" onclick="editEntry()">编辑</button>
+                <button class="btn btn-danger" style="margin-left:0;width:auto" onclick="deleteEntry()">删除</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        let users=JSON.parse(localStorage.getItem('diaryUsers'))||{},currentUser=null,currentDate=new Date(),selectedDate=null,selectedEmoji='📝',editingEntryId=null,viewingEntryId=null;
+        window.onload=function(){const savedUser=localStorage.getItem('currentDiaryUser');if(savedUser&&users[savedUser]){currentUser=savedUser;showApp()}};
+        function handleLogin(){const username=document.getElementById('loginUsername').value.trim(),password=document.getElementById('loginPassword').value;if(!username||!password){showError('loginError','请填写账号和密码');return}if(users[username]&&users[username].password===password){currentUser=username;localStorage.setItem('currentDiaryUser',username);showApp()}else{showError('loginError','账号或密码错误')}}
+        function handleRegister(){const username=document.getElementById('regUsername').value.trim(),password=document.getElementById('regPassword').value,confirm=document.getElementById('regConfirm').value;if(!username||!password){showError('regError','请填写完整信息');return}if(users[username]){showError('regError','该账号已存在');return}if(password!==confirm){showError('regError','两次密码不一致');return}users[username]={password:password,entries:{}};localStorage.setItem('diaryUsers',JSON.stringify(users));currentUser=username;localStorage.setItem('currentDiaryUser',username);showApp()}
+        function showError(id,msg){const el=document.getElementById(id);el.textContent=msg;el.style.display='block';setTimeout(()=>el.style.display='none',3000)}
+        function showRegister(){document.getElementById('loginForm').style.display='none';document.getElementById('registerForm').style.display='block'}
+        function showLogin(){document.getElementById('registerForm').style.display='none';document.getElementById('loginForm').style.display='block'}
+        function showApp(){document.getElementById('loginPage').style.display='none';document.getElementById('appPage').style.display='block';document.getElementById('displayUsername').textContent=currentUser;document.getElementById('userAvatar').textContent=currentUser.charAt(0).toUpperCase();renderCalendar();renderDiaryList()}
+        function handleLogout(){currentUser=null;localStorage.removeItem('currentDiaryUser');location.reload()}
+        function getMonthEntries(year,month){if(!currentUser||!users[currentUser])return{};const entries=users[currentUser].entries||{},result={};Object.keys(entries).forEach(dateKey=>{const[y,m]=dateKey.split('-').map(Number);if(y===year&&m===month)result[dateKey]=entries[dateKey]});return result}
+        function renderCalendar(){const year=currentDate.getFullYear(),month=currentDate.getMonth();document.getElementById('currentMonth').textContent=`${year}年${month+1}月`;document.getElementById('diaryMonthTitle').textContent=`${month+1}月手记`;const firstDay=new Date(year,month,1),lastDay=new Date(year,month+1,0),startPadding=firstDay.getDay(),daysInMonth=lastDay.getDate(),prevMonthLastDay=new Date(year,month,0).getDate();let html='';const monthEntries=getMonthEntries(year,month+1);for(let i=startPadding-1;i>=0;i--){html+=`<div class="calendar-day other-month"><div class="day-number">${prevMonthLastDay-i}</div></div>`}const today=new Date();for(let day=1;day<=daysInMonth;day++){const dateKey=`${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`,dayEntries=monthEntries[dateKey]||[],hasEntry=dayEntries.length>0,emoji=hasEntry?dayEntries[dayEntries.length-1].emoji:'',isToday=today.getFullYear()===year&&today.getMonth()===month&&today.getDate()===day,isSelected=selectedDate===dateKey;let classes='calendar-day';if(isToday)classes+=' today';if(isSelected)classes+=' selected';html+=`<div class="${classes}" onclick="selectDate('${dateKey}')"><div class="day-number">${day}</div>${hasEntry?`<div class="day-emoji">${emoji}</div>`:''}</div>`}const remaining=(7-((startPadding+daysInMonth)%7))%7;for(let i=1;i<=remaining;i++){html+=`<div class="calendar-day other-month"><div class="day-number">${i}</div></div>`}document.getElementById('calendarGrid').innerHTML=html}
+        function changeMonth(delta){currentDate.setMonth(currentDate.getMonth()+delta);renderCalendar();renderDiaryList()}
+        function selectDate(dateKey){selectedDate=dateKey;renderCalendar();const element=document.getElementById(`group-${dateKey}`);if(element){element.scrollIntoView({behavior:'smooth',block:'center'});element.style.transform='scale(1.02)';setTimeout(()=>element.style.transform='',1000)}else{openNewEntry(dateKey)}}
+        function renderDiaryList(){const year=currentDate.getFullYear(),month=currentDate.getMonth()+1,entries=getMonthEntries(year,month),sortedDates=Object.keys(entries).sort().reverse();if(sortedDates.length===0){document.getElementById('diaryList').innerHTML=`<div class="empty-state fade-in"><div class="empty-emoji">🌿</div><div class="empty-text">这个月还没有记录</div><p style="font-size:0.9em;margin-top:8px">点击"记一笔"开始书写吧</p></div>`;return}let html='';const weekdays=['周日','周一','周二','周三','周四','周五','周六'];sortedDates.forEach(dateKey=>{const[y,m,d]=dateKey.split('-').map(Number),date=new Date(y,m-1,d),dayEntries=entries[dateKey].sort((a,b)=>b.timestamp-a.timestamp);html+=`<div class="date-group fade-in" id="group-${dateKey}"><div class="date-header"><span class="date-badge">${m}月${d}日</span><span class="date-weekday">${weekdays[date.getDay()]}</span></div><div class="entries-list">`;dayEntries.forEach(entry=>{const time=new Date(entry.timestamp).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'});html+=`<div class="entry-card" onclick="viewEntry('${dateKey}','${entry.id}')"><div class="entry-emoji">${entry.emoji}</div><div class="entry-content"><div class="entry-title">${entry.title||'无标题'}</div><div class="entry-preview">${entry.content.substring(0,50)}${entry.content.length>50?'...':''}</div></div><div class="entry-time">${time}</div></div>`});html+=`</div></div>`});document.getElementById('diaryList').innerHTML=html}
+        document.querySelectorAll('.emoji-option').forEach(option=>{option.addEventListener('click',function(){document.querySelectorAll('.emoji-option').forEach(o=>o.classList.remove('selected'));this.classList.add('selected');selectedEmoji=this.dataset.emoji})});
+        function openNewEntry(dateKey){editingEntryId=null;selectedEmoji='📝';document.querySelectorAll('.emoji-option').forEach(o=>o.classList.remove('selected'));document.querySelector('[data-emoji="📝"]').classList.add('selected');if(dateKey){selectedDate=dateKey}else if(!selectedDate){const now=new Date();selectedDate=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`}document.getElementById('modalTitle').textContent='写下今天的心情';document.getElementById('entryTitle').value='';document.getElementById('entryContent').value='';document.getElementById('entryModal').classList.add('active')}
+        function saveEntry(){const title=document.getElementById('entryTitle').value.trim(),content=document.getElementById('entryContent').value.trim();if(!content){alert('请写下一些内容吧');return}if(!users[currentUser].entries)users[currentUser].entries={};if(!users[currentUser].entries[selectedDate])users[currentUser].entries[selectedDate]=[];if(editingEntryId){const entry=users[currentUser].entries[selectedDate].find(e=>e.id===editingEntryId);if(entry){entry.title=title;entry.content=content;entry.emoji=selectedEmoji}}else{users[currentUser].entries[selectedDate].push({id:Date.now().toString(),title:title,content:content,emoji:selectedEmoji,timestamp:Date.now()})}localStorage.setItem('diaryUsers',JSON.stringify(users));closeModal();renderCalendar();renderDiaryList()}
+        function viewEntry(dateKey,entryId){const entry=users[currentUser].entries[dateKey].find(e=>e.id===entryId);if(!entry)return;viewingEntryId=entryId;selectedDate=dateKey;const[y,m,d]=dateKey.split('-').map(Number),date=new Date(y,m-1,d),weekdays=['周日','周一','周二','周三','周四','周五','周六'];document.getElementById('detailDate').innerHTML=`<span style="font-size:1.5em">${entry.emoji}</span> ${y}年${m}月${d}日 ${weekdays[date.getDay()]}`;document.getElementById('detailTitle').textContent=entry.title||'无标题';document.getElementById('detailContent').textContent=entry.content;document.getElementById('detailModal').classList.add('active')}
+        function editEntry(){const entry=users[currentUser].entries[selectedDate].find(e=>e.id===viewingEntryId);if(!entry)return;editingEntryId=viewingEntryId;selectedEmoji=entry.emoji;document.querySelectorAll('.emoji-option').forEach(o=>{o.classList.toggle('selected',o.dataset.emoji===entry.emoji)});document.getElementById('modalTitle').textContent='编辑日记';document.getElementById('entryTitle').value=entry.title;document.getElementById('entryContent').value=entry.content;closeDetailModal();document.getElementById('entryModal').classList.add('active')}
+        function deleteEntry(){if(!confirm('确定要删除这篇日记吗？'))return;const entries=users[currentUser].entries[selectedDate];users[currentUser].entries[selectedDate]=entries.filter(e=>e.id!==viewingEntryId);if(users[currentUser].entries[selectedDate].length===0)delete users[currentUser].entries[selectedDate];localStorage.setItem('diaryUsers',JSON.stringify(users));closeDetailModal();renderCalendar();renderDiaryList()}
+        function closeModal(){document.getElementById('entryModal').classList.remove('active')}
+        function closeDetailModal(){document.getElementById('detailModal').classList.remove('active')}
+        document.getElementById('entryModal').addEventListener('click',function(e){if(e.target===this)closeModal()});
+        document.getElementById('detailModal').addEventListener('click',function(e){if(e.target===this)closeDetailModal()});
+        document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeModal();closeDetailModal()}});
+    </script>
+</body>
+</html>
