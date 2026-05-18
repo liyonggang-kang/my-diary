@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>个人月度计划表</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:微软雅黑;}
+        body{background:#fff;padding:15px;}
+        .logout{position:fixed;top:15px;right:20px;padding:6px 15px;background:#f03838;color:#fff;border:none;border-radius:4px;cursor:pointer;}
+        .box{display:flex;gap:20px;max-width:3000px;margin:0 auto;}
+        .left{width:280px;flex-shrink:0;}
+        .calendar{margin-bottom:25px;}
+        .cal-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+        .cal-num{font-size:42px;font-weight:bold;color:#222;}
+        .cal-ym{font-size:14px;color:#666;margin-left:6px;}
+        .cal-btn{border:none;background:none;font-size:20px;cursor:pointer;color:#555;}
+        .week-tit{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-size:12px;color:#777;margin:6px 0;}
+        .day-wrap{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+        .day-item{text-align:center;padding:6px 0;font-size:13px;border-radius:4px;cursor:pointer;}
+        .day-item:hover{background:#f1f3f6;}
+        .day-item.active{background:#ff8878;color:#fff;}
+        .mod{margin:24px 0;}
+        .mod-tit{font-size:14px;font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:5px;}
+        .stat-line{display:flex;justify-content:space-between;padding:4px 0;font-size:13px;}
+        .dot{width:12px;height:12px;border-radius:50%;display:inline-block;margin-right:4px;}
+        .ok{background:#67c23a;}
+        .ing{background:#e6a23c;}
+        .no{background:#f56c6c;}
+        .circle-rate{width:80px;height:80px;border-radius:50%;border:6px solid #eee;border-top-color:#ff8878;display:flex;align-items:center;justify-content:center;font-weight:bold;margin-top:10px;}
+        .plan-ul{list-style:none;}
+        .plan-li{display:flex;align-items:center;justify-content:space-between;padding:5px 0;font-size:13px;}
+        .plan-inp{flex:1;border:none;outline:none;background:transparent;}
+        .review-tit{font-size:13px;font-weight:600;margin:12px 0 4px;display:flex;align-items:center;gap:5px;}
+        .review-text{width:100%;border:1px solid #eee;padding:8px;min-height:80px;resize:vertical;outline:none;font-size:12px;line-height:1.5;}
+        .right{flex:1;overflow:auto;height:calc(100vh - 30px);}
+        table{border-collapse:collapse;table-layout:fixed;min-width:4000px;}
+        thead th{position:sticky;top:0;background:#fff;border:1px solid #ccc;z-index:3;width:100px;}
+        thead th.time-td{z-index:5;width:60px;}
+        td.time-td{position:sticky;left:0;background:#f8f9fa;border:1px solid #ccc;z-index:2;width:60px;}
+        th,td{border:1px solid #ccc;padding:4px;vertical-align:top;}
+        .head-th{text-align:center;font-weight:normal;font-size:12px;}
+        .rate-text{font-size:12px;color:#ff6749;font-weight:bold;}
+        .plan-cell{width:100px;}
+        .cell-box{display:flex;gap:4px;align-items:flex-start;}
+        .cell-text{width:100%;min-height:24px;border:none;outline:none;background:transparent;resize:none;font-size:12px;line-height:1.5;overflow:hidden;word-wrap:break-word;white-space:normal;}
+        .status-dot{width:12px;height:12px;border-radius:50%;cursor:pointer;display:none;flex-shrink:0;margin-top:2px;}
+    </style>
+</head>
+<body>
+<button class="logout" onclick="logout()">退出登录</button>
+<div class="box">
+    <div class="left">
+        <div class="calendar">
+            <div class="cal-top">
+                <div>
+                    <span class="cal-num" id="mNum">5</span>
+                    <span class="cal-ym" id="mText">May / 2026</span>
+                </div>
+                <div>
+                    <button class="cal-btn" onclick="preMonth()">&lt;</button>
+                    <button class="cal-btn" onclick="nextMonth()">&gt;</button>
+                </div>
+            </div>
+            <div class="week-tit">
+                <span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span>
+            </div>
+            <div class="day-wrap" id="dayBox"></div>
+        </div>
+        <div class="mod">
+            <div class="mod-tit">今日计划情况</div>
+            <div class="stat-line"><span><span class="dot ok"></span>已完成</span><span id="tdOk">0</span></div>
+            <div class="stat-line"><span><span class="dot ing"></span>进行中</span><span id="tdIng">0</span></div>
+            <div class="stat-line"><span><span class="dot no"></span>未开始</span><span id="tdNo">0</span></div>
+        </div>
+        <div class="mod">
+            <div class="mod-tit">本月计划情况</div>
+            <div class="stat-line"><span><span class="dot ok"></span>已完成</span><span id="mdOk">0</span></div>
+            <div class="stat-line"><span class="dot ing"></span>进行中</span><span id="mdIng">0</span></div>
+            <div class="stat-line"><span class="dot no"></span>未开始</span><span id="mdNo">0</span></div>
+            <div class="circle-rate" id="allRate">0%</div>
+        </div>
+        <div class="mod">
+            <div class="mod-tit">本月重点计划</div>
+            <ul class="plan-ul" id="planList"></ul>
+        </div>
+        <div class="mod">
+            <div class="review-tit"><span class="dot ok"></span>本月成果</div>
+            <textarea class="review-text" placeholder="填写本月总结成果"></textarea>
+            <div class="review-tit"><span class="dot ing"></span>心得反思</div>
+            <textarea class="review-text" placeholder="填写自我反思与改进"></textarea>
+        </div>
+    </div>
+    <div class="right">
+        <table>
+            <thead>
+                <tr><th class="time-td">时间</th></tr>
+                <tr><th class="time-td"></th></tr>
+                <tr><th class="time-td"></th></tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+</div>
+<script>
+if(!localStorage.getItem("nowUser")){
+    alert("请先登录账号");
+    location.href="https://liyonggang-kang.github.io/my-diary/login.html";
+}
+function logout(){
+    localStorage.removeItem("nowUser");
+    location.href="https://liyonggang-kang.github.io/my-diary/login.html";
+}
+let nowY=new Date().getFullYear();
+let nowM=new Date().getMonth();
+const monthEn=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const weekCn=["星期一","星期二","星期三","星期四","星期五","星期六","星期日"];
+const timeArr=["6:00","7:00","8:00","9:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00","21:00","22:00","23:00","0:00","1:00","2:00","3:00","4:00","5:00"];
+function drawCal(y,m){
+    let first=new Date(y,m,1).getDay();
+    let totalDay=new Date(y,m+1,0).getDate();
+    let html="";
+    for(let i=0;i<first;i++)html+='<div class="day-item"></div>';
+    for(let d=1;d<=totalDay;d++)html+=`<div class="day-item" onclick="chooseDate(this)">${d}</div>`;
+    document.getElementById("dayBox").innerHTML=html;
+    document.getElementById("mNum").innerText=m+1;
+    document.getElementById("mText").innerText=`${monthEn[m]} / ${y}`;
+}
+function chooseDate(dom){document.querySelectorAll(".day-item").forEach(v=>v.classList.remove("active"));dom.classList.add("active");}
+function preMonth(){nowM--;if(nowM<0){nowM=11;nowY--;}drawCal(nowY,nowM);drawTable(nowY,nowM);}
+function nextMonth(){nowM++;if(nowM>11){nowM=0;nowY++;}drawCal(nowY,nowM);drawTable(nowY,nowM);}
+function drawTable(y,m){
+    let h1=document.querySelector("thead tr:nth-child(1)");
+    let h2=document.querySelector("thead tr:nth-child(2)");
+    let h3=document.querySelector("thead tr:nth-child(3)");
+    let tb=document.getElementById("tableBody");
+    h1.innerHTML='<th class="time-td">时间</th>';h2.innerHTML='<th class="time-td"></th>';h3.innerHTML='<th class="time-td"></th>';tb.innerHTML='';
+    let startWeek=new Date(y,m,1).getDay();
+    let fixWeek=startWeek===0?6:startWeek-1;
+    for(let d=1;d<=31;d++){
+        let w=(fixWeek+d-1)%7;
+        h1.innerHTML+=`<th class="head-th">${y}/${m+1}/${d}</th>`;
+        h2.innerHTML+=`<th class="head-th">${weekCn[w]}</th>`;
+        h3.innerHTML+=`<th class="head-th rate-text" id="dayRate${d}">0%</th>`;
+    }
+    timeArr.forEach(t=>{
+        let tr=document.createElement("tr");
+        let tdT=document.createElement("td");tdT.className="time-td";tdT.innerText=t;tr.appendChild(tdT);
+        for(let day=1;day<=31;day++){
+            let td=document.createElement("td");td.className="plan-cell";
+            td.innerHTML=`<div class="cell-box"><textarea class="cell-text" data-d="${day}" oninput="changeInp(this)"></textarea><div class="status-dot no" onclick="switchSta(this)"></div></div>`;
+            tr.appendChild(td);
+        }
+        tb.appendChild(tr);
+    });
+    countData();
+}
+function changeInp(el){
+    let dot=el.nextElementSibling;
+    el.value.trim()?dot.style.display="block":(dot.style.display="none",dot.className="status-dot no");
+    el.style.height="24px";el.style.height=el.scrollHeight+"px";countData();
+}
+function switchSta(el){
+    if(el.classList.contains("no"))el.className="status-dot ing";
+    else if(el.classList.contains("ing"))el.className="status-dot ok";
+    else el.className="status-dot no";
+    countData();
+}
+function countData(){
+    let o=0,i=0,n=0,all=0;
+    document.querySelectorAll(".cell-text").forEach(txt=>{
+        if(txt.value.trim()){
+            all++;
+            let d=txt.nextElementSibling;
+            if(d.classList.contains("ok"))o++;
+            else if(d.classList.contains("ing"))i++;
+            else n++;
+        }
+    });
+    document.getElementById("mdOk").innerText=o;
+    document.getElementById("mdIng").innerText=i;
+    document.getElementById("mdNo").innerText=n;
+    document.getElementById("allRate").innerText=all==0?"0%":Math.round(o/all*100)+"%";
+    for(let d=1;d<=31;d++){
+        let arr=document.querySelectorAll(`.cell-text[data-d="${d}"]`);
+        let total=0,finish=0;
+        arr.forEach(v=>{
+            if(v.value.trim()){total++;if(v.nextElementSibling.classList.contains("ok"))finish++;}
+        });
+        let p=total==0?0:Math.round(finish/total*100);
+        document.getElementById(`dayRate${d}`).innerText=p+"%";
+    }
+    let listHtml="",idx=1;
+    document.querySelectorAll(".cell-text").forEach(v=>{
+        let val=v.value.trim();
+        if(val){
+            let st=v.nextElementSibling.className;
+            listHtml+=`<li class="plan-li"><span>${idx}.</span><input class="plan-inp" value="${val}" readonly><span class="dot ${st.split(' ')[1]}"></span></li>`;
+            idx++;
+        }
+    });
+    document.getElementById("planList").innerHTML=listHtml;
+}
+drawCal(nowY,nowM);drawTable(nowY,nowM);
+</script>
+</body>
+</html>
