@@ -34,18 +34,52 @@
         .review-tit{font-size:13px;font-weight:600;margin:12px 0 4px;display:flex;align-items:center;gap:5px;}
         .review-text{width:100%;border:1px solid #eee;padding:8px;min-height:80px;resize:vertical;outline:none;font-size:12px;line-height:1.5;}
         .right{flex:1;overflow:auto;height:calc(100vh - 30px);}
-        table{border-collapse:collapse;table-layout:fixed;min-width:4000px;}
-        thead th{position:sticky;top:0;background:#fff;border:1px solid #ccc;z-index:3;}
-        thead th.time-td{z-index:5;}
-        td.time-td{position:sticky;left:0;background:#f8f9fa;border:1px solid #ccc;z-index:2;}
+        /* 修复GitHub Pages表格塌陷问题 */
+        table{border-collapse:collapse;width:100%;}
+        thead th{
+            position:sticky;
+            top:0;
+            background:#fff;
+            border:1px solid #ccc;
+            z-index:3;
+            width:100px;
+        }
+        thead th.time-td{width:60px;z-index:5;}
+        td.time-td{
+            position:sticky;
+            left:0;
+            background:#f8f9fa;
+            border:1px solid #ccc;
+            z-index:2;
+            width:60px;
+        }
         th,td{border:1px solid #ccc;padding:4px;vertical-align:top;}
-        .time-td{width:60px;text-align:center;font-size:12px;}
-        .head-th{text-align:center;font-weight:normal;font-size:12px;width:100px;}
+        .head-th{text-align:center;font-weight:normal;font-size:12px;}
         .rate-text{font-size:12px;color:#ff6749;font-weight:bold;}
         .plan-cell{width:100px;}
         .cell-box{display:flex;gap:4px;align-items:flex-start;}
-        .cell-text{width:100%;min-height:24px;border:none;outline:none;background:transparent;resize:none;font-size:12px;line-height:1.5;overflow:hidden;word-wrap:break-word;white-space:normal;}
-        .status-dot{width:12px;height:12px;border-radius:50%;cursor:pointer;display:none;flex-shrink:0;margin-top:2px;}
+        .cell-text{
+            width:100%;
+            min-height:24px;
+            border:none;
+            outline:none;
+            background:transparent;
+            resize:none;
+            font-size:12px;
+            line-height:1.5;
+            overflow:hidden;
+            word-wrap:break-word;
+            white-space:normal;
+        }
+        .status-dot{
+            width:12px;
+            height:12px;
+            border-radius:50%;
+            cursor:pointer;
+            display:none;
+            flex-shrink:0;
+            margin-top:2px;
+        }
     </style>
 </head>
 <body>
@@ -77,8 +111,8 @@
         <div class="mod">
             <div class="mod-tit">本月计划情况</div>
             <div class="stat-line"><span><span class="dot ok"></span>已完成</span><span id="mdOk">0</span></div>
-            <div class="stat-line"><span class="dot ing"></span>进行中</span><span id="mdIng">0</span></div>
-            <div class="stat-line"><span class="dot no"></span>未开始</span><span id="mdNo">0</span></div>
+            <div class="stat-line"><span><span class="dot ing"></span>进行中</span><span id="mdIng">0</span></div>
+            <div class="stat-line"><span><span class="dot no"></span>未开始</span><span id="mdNo">0</span></div>
             <div class="circle-rate" id="allRate">0%</div>
         </div>
         <div class="mod">
@@ -129,4 +163,80 @@ function drawCal(y,m){
 }
 function chooseDate(dom){document.querySelectorAll(".day-item").forEach(v=>v.classList.remove("active"));dom.classList.add("active");}
 function preMonth(){nowM--;if(nowM<0){nowM=11;nowY--;}drawCal(nowY,nowM);drawTable(nowY,nowM);}
-function next
+function nextMonth(){nowM++;if(nowM>11){nowM=0;nowY++;}drawCal(nowY,nowM);drawTable(nowY,nowM);}
+function drawTable(y,m){
+    let h1=document.querySelector("thead tr:nth-child(1)");
+    let h2=document.querySelector("thead tr:nth-child(2)");
+    let h3=document.querySelector("thead tr:nth-child(3)");
+    let tb=document.getElementById("tableBody");
+    h1.innerHTML='<th class="time-td">时间</th>';h2.innerHTML='<th class="time-td"></th>';h3.innerHTML='<th class="time-td"></th>';tb.innerHTML='';
+    let startWeek=new Date(y,m,1).getDay();
+    let fixWeek=startWeek===0?6:startWeek-1;
+    for(let d=1;d<=31;d++){
+        let w=(fixWeek+d-1)%7;
+        h1.innerHTML+=`<th class="head-th">${y}/${m+1}/${d}</th>`;
+        h2.innerHTML+=`<th class="head-th">${weekCn[w]}</th>`;
+        h3.innerHTML+=`<th class="head-th rate-text" id="dayRate${d}">0%</th>`;
+    }
+    timeArr.forEach(t=>{
+        let tr=document.createElement("tr");
+        let tdT=document.createElement("td");tdT.className="time-td";tdT.innerText=t;tr.appendChild(tdT);
+        for(let day=1;day<=31;day++){
+            let td=document.createElement("td");td.className="plan-cell";
+            td.innerHTML=`<div class="cell-box"><textarea class="cell-text" data-d="${day}" oninput="changeInp(this)"></textarea><div class="status-dot no" onclick="switchSta(this)"></div></div>`;
+            tr.appendChild(td);
+        }
+        tb.appendChild(tr);
+    });
+    countData();
+}
+function changeInp(el){
+    let dot=el.nextElementSibling;
+    el.value.trim()?dot.style.display="block":(dot.style.display="none",dot.className="status-dot no");
+    el.style.height="24px";el.style.height=el.scrollHeight+"px";countData();
+}
+function switchSta(el){
+    if(el.classList.contains("no"))el.className="status-dot ing";
+    else if(el.classList.contains("ing"))el.className="status-dot ok";
+    else el.className="status-dot no";
+    countData();
+}
+function countData(){
+    let o=0,i=0,n=0,all=0;
+    document.querySelectorAll(".cell-text").forEach(txt=>{
+        if(txt.value.trim()){
+            all++;
+            let d=txt.nextElementSibling;
+            if(d.classList.contains("ok"))o++;
+            else if(d.classList.contains("ing"))i++;
+            else n++;
+        }
+    });
+    document.getElementById("mdOk").innerText=o;
+    document.getElementById("mdIng").innerText=i;
+    document.getElementById("mdNo").innerText=n;
+    document.getElementById("allRate").innerText=all==0?"0%":Math.round(o/all*100)+"%";
+    for(let d=1;d<=31;d++){
+        let arr=document.querySelectorAll(`.cell-text[data-d="${d}"]`);
+        let total=0,finish=0;
+        arr.forEach(v=>{
+            if(v.value.trim()){total++;if(v.nextElementSibling.classList.contains("ok"))finish++;}
+        });
+        let p=total==0?0:Math.round(finish/total*100);
+        document.getElementById(`dayRate${d}`).innerText=p+"%";
+    }
+    let listHtml="",idx=1;
+    document.querySelectorAll(".cell-text").forEach(v=>{
+        let val=v.value.trim();
+        if(val){
+            let st=v.nextElementSibling.className;
+            listHtml+=`<li class="plan-li"><span>${idx}.</span><input class="plan-inp" value="${val}" readonly><span class="dot ${st.split(' ')[1]}"></span></li>`;
+            idx++;
+        }
+    });
+    document.getElementById("planList").innerHTML=listHtml;
+}
+drawCal(nowY,nowM);drawTable(nowY,nowM);
+</script>
+</body>
+</html>
